@@ -1,2 +1,0 @@
-C:\data\ini-viewer\Ini_Reader\ini\test.ini
-C:\data\ini-viewer\Ini_Reader\ini\test2.ini
