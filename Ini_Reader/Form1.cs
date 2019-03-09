@@ -33,7 +33,7 @@ namespace Ini_Reader
 		   else MessageBox.Show("Please, insert the path");
 		}
 
-		private void button2_Click(object sender, EventArgs e) //открытие файла дилоговым окном
+		private void button2_Click(object sender, EventArgs e) //открытие файла диалоговым окном
 		{
 			try
 			{ 
@@ -120,7 +120,7 @@ namespace Ini_Reader
 
 				while ((line = reader.ReadLine()) != null)
 				{
-					line = TrimComment(line);
+					line = TrimComment(line); //вырезаем комментарий из строки
 
 					if (line.Length == 0) continue;
 
