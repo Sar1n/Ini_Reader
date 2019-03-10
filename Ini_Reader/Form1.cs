@@ -16,6 +16,7 @@ namespace Ini_Reader
     {
 		int flowHeight = 5, flowWidth = 5; //позиционирование надписей на форме
 		string prev = ""; //предыдущее значение ключа
+		string pattern = @"\S*\.ini";
 
 		public Form1()
         {
@@ -24,13 +25,17 @@ namespace Ini_Reader
 
         private void button1_Click(object sender, EventArgs e) //открытие файла по пути
         {
-		   if (textBox1.Text != "")
+			try
 			{
 				panel1.Controls.Clear();
 				flowWidth = 5;
-				Display(textBox1.Text);
+				if (Regex.IsMatch(textBox1.Text, pattern, RegexOptions.IgnoreCase)) Display(textBox1.Text);
+				else throw new Exception("Insert correct path to the *.ini file");
 			}
-		   else MessageBox.Show("Please, insert the path");
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.Message);
+			}
 		}
 
 		private void button2_Click(object sender, EventArgs e) //открытие файла диалоговым окном
@@ -42,73 +47,14 @@ namespace Ini_Reader
 				{
 					panel1.Controls.Clear();
 					flowWidth = 5;
-					Display(fileDialog.FileName);
+					if (Regex.IsMatch(fileDialog.FileName, pattern, RegexOptions.IgnoreCase)) Display(fileDialog.FileName);
+					else throw new Exception("Insert *.ini file");
 				}
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show(ex.ToString());
+				MessageBox.Show(ex.Message);
 			}
-		}
-
-		void CreateSection(string section) //вывод секции на форму
-		{
-			flowHeight = 5;
-			Label sectionlabel = new Label();
-			sectionlabel.Text = "[" + section + "]";
-			sectionlabel.Location = new Point(flowHeight, flowWidth);
-			panel1.Controls.Add(sectionlabel);
-			flowWidth += 30;
-		}
-		void CreateNameValue(string key, string value) //вывод пары ключ - значение
-		{
-			flowHeight += 20; //отступ
-			TextBox valueblock = new TextBox();
-			if (key == prev) //если у данного значения ключ как у предыдущего
-			{
-				flowWidth -= 30;
-				flowHeight += 130;
-
-				valueblock.Text = value;
-				valueblock.Size = new Size(120, 25);
-				valueblock.Location = new Point(flowHeight, flowWidth);
-				panel1.Controls.Add(valueblock);
-			}
-			else
-			{
-				prev = key;
-
-				flowHeight = 5;					//вывод ключа 
-				TextBox keyblock = new TextBox();
-				keyblock.Text = key;
-				keyblock.Size = new Size(120, 25);
-				keyblock.Location = new Point(flowHeight, flowWidth);
-				panel1.Controls.Add(keyblock);
-				flowHeight += 130;
-
-				Label eq = new Label();			//вывод =
-				eq.Text = "=";
-				eq.Size = new Size(15, 13);
-				eq.Location = new Point(flowHeight, flowWidth);
-				panel1.Controls.Add(eq);
-				flowHeight += 25;
-
-				valueblock.Text = value;		//вывод значения
-				valueblock.Size = new Size(120, 25);
-				valueblock.Location = new Point(flowHeight, flowWidth);
-				panel1.Controls.Add(valueblock);
-			}
-			flowWidth += 30;
-		}
-
-		string TrimComment(string s) //вырезаем комментарий из строки
-		{
-			if (s.Contains(";"))
-			{
-				int index = s.IndexOf(';');
-				s = s.Substring(0, index).Trim();
-			}
-			return s;
 		}
 
 		private void Display(string path) //метод чтения из файла
@@ -120,10 +66,8 @@ namespace Ini_Reader
 
 				while ((line = reader.ReadLine()) != null)
 				{
-					line = TrimComment(line); //вырезаем комментарий из строки
-
 					if (line.Length == 0) continue;
-
+					line = TrimComment(line); //вырезаем комментарий из строки
 					if (line.StartsWith("[") && line.Contains("]"))  //section
 					{
 						int index = line.IndexOf(']');
@@ -131,7 +75,6 @@ namespace Ini_Reader
 						CreateSection(sectionName);
 						continue;
 					}
-
 					if (line.Contains("="))  //key = value
 					{
 						int index = line.IndexOf('=');
@@ -150,8 +93,8 @@ namespace Ini_Reader
 							{
 								indexcomma = line.IndexOf(",");
 								value = line.Substring(0, indexcomma).Trim();
-								line = line.Substring(indexcomma + 1).Trim();
 								CreateNameValue(key, value);
+								line = line.Substring(indexcomma + 1).Trim();
 							}
 							value = line.Trim();
 							CreateNameValue(key, value);
@@ -170,9 +113,69 @@ namespace Ini_Reader
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show(ex.ToString());
+				MessageBox.Show(ex.Message);
 			}
 		}
 
+		void CreateSection(string section) //вывод секции на форму
+		{
+			flowHeight = 5;
+			Label sectionlabel = new Label();
+			sectionlabel.Text = "[" + section + "]";
+			sectionlabel.Location = new Point(flowHeight, flowWidth);
+			panel1.Controls.Add(sectionlabel);
+			flowWidth += 30;
+		}
+
+		void CreateNameValue(string key, string value) //вывод пары ключ = значение на форму
+		{
+			flowHeight += 20; //отступ
+			TextBox valueblock = new TextBox();
+			if (key == prev) //если у данного значения ключ как у предыдущего
+			{
+				flowWidth -= 30;
+				flowHeight += 130;
+
+				valueblock.Text = value;
+				valueblock.Size = new Size(120, 25);
+				valueblock.Location = new Point(flowHeight, flowWidth);
+				panel1.Controls.Add(valueblock);
+			}
+			else
+			{
+				prev = key;
+
+				flowHeight = 5;                 //вывод ключа 
+				TextBox keyblock = new TextBox();
+				keyblock.Text = key;
+				keyblock.Size = new Size(120, 25);
+				keyblock.Location = new Point(flowHeight, flowWidth);
+				panel1.Controls.Add(keyblock);
+				flowHeight += 130;
+
+				Label eq = new Label();         //вывод =
+				eq.Text = "=";
+				eq.Size = new Size(15, 13);
+				eq.Location = new Point(flowHeight, flowWidth);
+				panel1.Controls.Add(eq);
+				flowHeight += 25;
+
+				valueblock.Text = value;        //вывод значения
+				valueblock.Size = new Size(120, 25);
+				valueblock.Location = new Point(flowHeight, flowWidth);
+				panel1.Controls.Add(valueblock);
+			}
+			flowWidth += 30;
+		}
+
+		string TrimComment(string s) //вырезаем комментарий из строки
+		{
+			if (s.Contains(";"))
+			{
+				int index = s.IndexOf(';');
+				s = s.Substring(0, index).Trim();
+			}
+			return s;
+		}
 	}
 }
